@@ -1,0 +1,37 @@
+html, body {
+	background-color: #aaa;
+}
+#huba {
+	width: 700px;
+	margin: auto;
+	border: 2px solid #666;
+	background-color: #fff;
+	padding: 1em;
+}
+#search {
+	border: 1px solid #666;
+	outline: none;
+	padding: 0.5em;
+}
+#search:focus {
+	border-color: #999;
+}
+#suggestions {
+	list-style-type: none;
+	position: absolute;
+	background-color: #999;
+	cursor: pointer;
+	display: none;
+	margin: 0;
+	padding: 0;
+	font: 1em Tahoma;
+}
+#suggestions > li {
+	padding: 0.5em;
+}
+#suggestions > li:hover {
+	background-color: #eee;
+}
+.selected {
+	background-color: #eee;
+}
