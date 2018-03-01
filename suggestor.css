@@ -24,14 +24,14 @@ html, body {
 	display: none;
 	margin: 0;
 	padding: 0;
-	font: 1em Tahoma;
-}
+	font: 0.8em Tahoma;
+
 #suggestions > li {
 	padding: 0.5em;
 }
 #suggestions > li:hover {
-	background-color: #eee;
+	background-color: #aaa;
 }
 .selected {
-	background-color: #eee;
+	background-color: #fff !important;
 }

@@ -8,21 +8,13 @@
 	should create the suggestions element dynamically
 	should insert UL element dynamically, just after the text field
 	should use DOM operations instead of innerHTML when updating
-	
+	should show suggestions in a box with a max-height, overflow will cause scrollbar
+	should handle key down and key up accordingly (scroll selected item into view)
+
 	should be OO
 	should accept a function which retrives data and returns a filtered array of search result
 
-	probably should use addClass instead of styling directly
-
 	TODO:
-	respond to arrow up and down when suggestions are shown DONE
-	add key down event handler to search field DONE
-	implement some way of keeping track of which element is selected DONE
-	handle esc key DONE
-	empty field yields weird results right now 
-		solution is: not check if search field is empty, do something else. need to investigate
-	programmatically highlight element under mouse cursor, instead of :hover. needed cuz it should
-		seemlessly cooperate with key up and key down selections
 -->
 
 <!DOCTYPE html>
@@ -31,39 +23,56 @@
 	<title>box</title>
 	<link rel="stylesheet" type="text/css" href="suggestor.css">
 	<script type="text/javascript">
+		const key = {
+			up: 38,
+			down: 40,
+			esc: 27
+		}
+
 		function $(id) {
 			return document.getElementById(id);
 		}
 
+		function hide() {
+			$("suggestions").style.display = 'none';
+			visible = false;
+		}
+
+		function show() {
+			$("suggestions").style.display = 'block';
+			visible = true;	
+		}
+
 		var xmlhttp = new XMLHttpRequest();
 		var url = "test.json";
-		var selected, search_old;
+		var selected, search_old, visible;
 
 		xmlhttp.onreadystatechange = function() {
 			// console.log(this.readyState, this.status);
 			if (this.readyState == 4 && this.status == 200) {
 				var data = JSON.parse(this.responseText);
 
-				$suggestions = $("suggestions");
+				var $suggestions = $("suggestions");
 
 				// remove all items from list
 				while ($suggestions.firstChild) {
 					$suggestions.removeChild($suggestions.firstChild);
 				}
+				
 
 				// new regexp object, fetch search criteria from search box
-				const regex = new RegExp("^" + $("search").value, 'i');
+				const regex = new RegExp("(" + $("search").value + ")", 'gi');
 				data.forEach(item => {
 					if (regex.test(item.name)) {
-						$li = document.createElement("li");
-						$text = document.createTextNode(item.name);
+						var $li = document.createElement("li");
+						$li.innerHTML = (item.name).replace(regex, '<b>$1</b>');
 
-						$li.appendChild($text);
 						$suggestions.appendChild($li);
 					}
 				});
 
-				$("suggestions").style.display = 'block'; // <-- old skool (pre-html5) way of doing it
+				// show only if list of suggestions isn't empty
+				if ($suggestions.firstChild) show();
 			}
 		};
 		
@@ -81,61 +90,57 @@
 		$("search").addEventListener('input', e => {
 			search_old = null; // reset
 			selected = null;
+			visible = false;
 
 			if ($("search").value !== '') {
 				xmlhttp.open("GET", url, true);
 				xmlhttp.send();
 			}
-			else $("suggestions").style.display = 'none';
+			else hide();
 		});
 		$("search").addEventListener('blur', e => {
-			$("suggestions").style.display = 'none';
+			hide();
 		});
 		$("search").addEventListener('keydown', e => {
-			// if no suggestions, simply return here. prevents nested if-hell
-			if (e.keyCode === 38 || e.keyCode === 40) { // TODO: check something else than value of search field
+			if (!visible) return;
+
+			if (e.keyCode === key.up || e.keyCode === key.down) {
 				e.preventDefault();
 
-				if ($("suggestions").firstChild) { // does any suggestions exist ?
-					switch (e.keyCode) {
-						case 40: // arrow down
-						if (selected) {
-							selected.classList.remove('selected');
-							selected = selected.nextSibling;
-						}
-						selected = selected || $("suggestions").firstChild;
-						break;
-
-						case 38: // arrow up
-						if (selected) {
-							selected.classList.remove('selected');
-							selected = selected.previousSibling;
-						}
-						selected = selected || $("suggestions").lastChild;
+				switch (e.keyCode) {
+					case key.down:
+					if (selected) {
+						selected.classList.remove('selected');
+						selected = selected.nextSibling;
 					}
+					else selected = $("suggestions").firstChild;
+					break;
 
-					selected.classList.add('selected');
-
-					// store old value, for use when esc key is hit
-					search_old = search_old || $("search").value;
-
-					$("search").value = selected.textContent;
+					case key.up:
+					if (selected) {
+						selected.classList.remove('selected');
+						selected = selected.previousSibling;
+					}
+					else selected = $("suggestions").lastChild;
 				}
+
+				if (selected) selected.classList.add('selected');
+
+				// store old value
+				search_old = search_old || $("search").value;
+				$("search").value = (selected) ? selected.textContent : search_old;
 			}
-			else if (e.keyCode === 27) { // ESC key
+			else if (e.keyCode === key.esc) { // ESC key
 				if (selected) $("search").value = search_old;
-				$("suggestions").style.display = 'none';
+				hide();
 			}
 		});
 
 		$("suggestions").addEventListener('mousedown', e => {
-			$("search").value = e.srcElement.textContent;
+			$("search").value = e.target.textContent;
 			e.preventDefault(); // prevents the blur event from firing
 
-			$("suggestions").style.display = 'none';
-			selected = null;
-			// .form is null if no parent form. if any parent form, .form holds a reference to it
-			// if ($("search").form) $("search").form.submit();
+			hide();
 		});
 	</script>
 </body>
