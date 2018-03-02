@@ -104,7 +104,7 @@
 			// cute little trick! ~[a,b].indexOf(c) returns 'not 0' if c is not in [a,b]
 			// why? cuz 0 = 00000000000000000000000000000000
 			// and flipping the bits (~) yields 11111111111111111111111111111111
-			// whis is -1 in binary
+			// whis is -1 in decimal
 			// and vice versa. so if index = -1, ~ -1 = 0 is returned
 			// if index !== -1, a nonzero integer is returned
 			if (~[key.up, key.down].indexOf(e.keyCode)) {
