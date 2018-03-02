@@ -51,22 +51,19 @@
 			// console.log(this.readyState, this.status);
 			if (this.readyState == 4 && this.status == 200) {
 				var data = JSON.parse(this.responseText);
-
 				var $suggestions = $("suggestions");
 
 				// remove all items from list
 				while ($suggestions.firstChild) {
 					$suggestions.removeChild($suggestions.firstChild);
 				}
-				
 
 				// new regexp object, fetch search criteria from search box
 				const regex = new RegExp("(" + $("search").value + ")", 'gi');
 				data.forEach(item => {
 					if (regex.test(item.name)) {
 						var $li = document.createElement("li");
-						$li.innerHTML = (item.name).replace(regex, '<b>$1</b>');
-
+						$li.innerHTML = item.name.replace(regex, '<b>$1</b>');
 						$suggestions.appendChild($li);
 					}
 				});
@@ -104,7 +101,13 @@
 		$("search").addEventListener('keydown', e => {
 			if (!visible) return;
 
-			if (e.keyCode === key.up || e.keyCode === key.down) {
+			// cute little trick! ~[a,b].indexOf(c) returns 'not 0' if c is not in [a,b]
+			// why? cuz 0 = 00000000000000000000000000000000
+			// and flipping the bits (~) yields 11111111111111111111111111111111
+			// whis is -1 in binary
+			// and vice versa. so if index = -1, ~ -1 = 0 is returned
+			// if index !== -1, a nonzero integer is returned
+			if (~[key.up, key.down].indexOf(e.keyCode)) {
 				e.preventDefault();
 
 				switch (e.keyCode) {
