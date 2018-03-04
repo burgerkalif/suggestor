@@ -15,6 +15,7 @@
 	should accept a function which retrives data and returns a filtered array of search result
 
 	TODO:
+	should abort ajax request when ESC key is pressed
 	should accept path in data source (JSON) as a string
 		ie: "name" => item.name & "name.first" ) => item.name.first
 -->
@@ -38,6 +39,7 @@
 		function hide() {
 			$("suggestions").style.display = 'none';
 			visible = false;
+			selected = null;
 		}
 
 		function show() {
@@ -50,7 +52,7 @@
 		var selected, search_old, visible;
 
 		xmlhttp.onreadystatechange = function() {
-			var q = $("search").value.trim();
+			var q = $("search").value.trimLeft();
 
 			if (q.length && this.readyState == 4 && this.status == 200) {
 				var data = JSON.parse(this.responseText);
@@ -64,7 +66,7 @@
 				// escape special characters (anything non-alphanumeric + space)
 				q = q.replace(/([^a-z0-9_ ])/gi, '\\$1');
 
-				// new regexp object, fetch search criteria from search box
+				// new regexp object
 				const regex = new RegExp("(" + q + ")", 'gi');
 				data.forEach(item => {
 					if (regex.test(item.name)) {
@@ -95,7 +97,7 @@
 			selected = null;
 			visible = false;
 
-			if ($("search").value !== '') {
+			if ($("search").value.trimLeft().length) {
 				xmlhttp.open("GET", url + '?' + Date.now().toString(), true);
 				xmlhttp.send();
 			}
@@ -105,15 +107,22 @@
 			hide();
 		});
 		$("search").addEventListener('keydown', e => {
-			if (!visible) return;
+			if (e.keyCode === key.esc) { // ESC key
 
-			// cute little trick! ~[a,b].indexOf(c) returns 'not 0' if c is not in [a,b]
-			// why? cuz 0 = 00000000000000000000000000000000
-			// and flipping the bits (~) yields 11111111111111111111111111111111
-			// whis is -1 in decimal
-			// and vice versa. so if index = -1, ~ -1 = 0 is returned
-			// if index !== -1, a nonzero integer is returned
-			if (~[key.up, key.down].indexOf(e.keyCode)) {
+				// abort pending ajax request, if any
+				if (xmlhttp.readyState > 0 && xmlhttp.readyState < 4) xmlhttp.abort();
+				if (selected) {
+					$("search").value = search_old;
+					hide();
+				}
+				else {
+					$("search").value = '';
+					if (visible) hide();
+				}
+			}
+
+			// only handle arrow up & down if any suggestions
+			else if (~[key.up, key.down].indexOf(e.keyCode) && visible) {
 				e.preventDefault();
 
 				switch (e.keyCode) {
@@ -138,10 +147,6 @@
 				// store old value
 				search_old = search_old || $("search").value;
 				$("search").value = (selected) ? selected.textContent : search_old;
-			}
-			else if (e.keyCode === key.esc) { // ESC key
-				if (selected) $("search").value = search_old;
-				hide();
 			}
 		});
 
