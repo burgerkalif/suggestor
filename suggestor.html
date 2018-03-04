@@ -111,18 +111,14 @@
 
 				// abort pending ajax request, if any
 				if (xmlhttp.readyState > 0 && xmlhttp.readyState < 4) xmlhttp.abort();
-				if (selected) {
-					$("search").value = search_old;
+				if (visible) {
+					if (selected) $("search").value = search_old;
 					hide();
-				}
-				else {
-					$("search").value = '';
-					if (visible) hide();
 				}
 			}
 
 			// only handle arrow up & down if any suggestions
-			else if (~[key.up, key.down].indexOf(e.keyCode) && visible) {
+			else if (visible && ~[key.up, key.down].indexOf(e.keyCode)) {
 				e.preventDefault();
 
 				switch (e.keyCode) {
