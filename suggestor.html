@@ -15,6 +15,8 @@
 	should accept a function which retrives data and returns a filtered array of search result
 
 	TODO:
+	should accept path in data source (JSON) as a string
+		ie: "name" => item.name & "name.first" ) => item.name.first
 -->
 
 <!DOCTYPE html>
@@ -48,8 +50,9 @@
 		var selected, search_old, visible;
 
 		xmlhttp.onreadystatechange = function() {
-			// console.log(this.readyState, this.status);
-			if (this.readyState == 4 && this.status == 200) {
+			var q = $("search").value.trim();
+
+			if (q.length && this.readyState == 4 && this.status == 200) {
 				var data = JSON.parse(this.responseText);
 				var $suggestions = $("suggestions");
 
@@ -58,8 +61,11 @@
 					$suggestions.removeChild($suggestions.firstChild);
 				}
 
+				// escape special characters (anything non-alphanumeric + space)
+				q = q.replace(/([^a-z0-9_ ])/gi, '\\$1');
+
 				// new regexp object, fetch search criteria from search box
-				const regex = new RegExp("(" + $("search").value + ")", 'gi');
+				const regex = new RegExp("(" + q + ")", 'gi');
 				data.forEach(item => {
 					if (regex.test(item.name)) {
 						var $li = document.createElement("li");
@@ -90,7 +96,7 @@
 			visible = false;
 
 			if ($("search").value !== '') {
-				xmlhttp.open("GET", url, true);
+				xmlhttp.open("GET", url + '?' + Date.now().toString(), true);
 				xmlhttp.send();
 			}
 			else hide();
