@@ -28,6 +28,11 @@ html, body {
 }
 #suggestions > li {
 	padding: 0.5em;
+
+	/* keeps everything in one line */
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 #suggestions > li:hover {
 	background-color: #aaa;
